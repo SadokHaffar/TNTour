@@ -52,6 +52,30 @@ export default function Signup() {
     }
   }, [currentUser, userData, authLoading, router]);
 
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-green-600 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-green-600 font-semibold">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render signup form if user is authenticated (will redirect)
+  if (currentUser && userData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-green-600 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-green-600 font-semibold">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Handle input changes
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -136,7 +160,9 @@ export default function Signup() {
         role: formData.role
       });
       
-      // The useEffect above will handle the redirect
+      // Account created successfully, redirect to login page
+      console.log('Account created successfully, redirecting to login...');
+      router.push('/login?message=account-created');
       
     } catch (error: any) {
       console.error('Signup failed:', error);

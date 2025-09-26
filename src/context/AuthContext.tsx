@@ -95,6 +95,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     await setDoc(doc(db, 'users', user.uid), userDocData);
+    
+    // Log out the user immediately after account creation
+    // so they need to manually log in with their new credentials
+    await signOut(auth);
   };
 
   const logout = async () => {

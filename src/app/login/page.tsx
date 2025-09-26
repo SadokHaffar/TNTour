@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
 
@@ -10,10 +10,20 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { login, currentUser, userData, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check for success message from signup
+  useEffect(() => {
+    const message = searchParams.get('message');
+    if (message === 'account-created') {
+      setSuccessMessage('Account created successfully! Please log in with your new credentials.');
+    }
+  }, [searchParams]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -23,6 +33,30 @@ export default function Login() {
       router.replace(redirectPath);
     }
   }, [currentUser, userData, authLoading, router]);
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-green-600 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-green-600 font-semibold">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render login form if user is authenticated (will redirect)
+  if (currentUser && userData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-green-600 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-green-600 font-semibold">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,6 +170,21 @@ export default function Login() {
                   Sign in to manage your tournaments
                 </p>
               </div>
+
+              {successMessage && (
+                <div className="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-md">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-green-700 font-medium">{successMessage}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {error && (
                 <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md animate-shake">
