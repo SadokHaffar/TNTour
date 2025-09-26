@@ -3,6 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   
+  // Configure for static export (required for Netlify)
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true
+  },
+  
   // COMPLETELY disable ESLint during builds for deployment
   eslint: {
     ignoreDuringBuilds: true,
