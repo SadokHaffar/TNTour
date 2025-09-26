@@ -5,6 +5,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, updateDoc, arrayUnion, arrayRemove, getDoc, onSnapshot } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 
 interface Tournament {
   id: string;
@@ -26,6 +27,7 @@ interface Tournament {
 
 export default function Dashboard() {
   const { currentUser, userData, logout } = useAuth();
+  const router = useRouter();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -89,6 +91,8 @@ export default function Dashboard() {
     
     return unsubscribe;
   };
+
+
 
   useEffect(() => {
     let tournamentsUnsubscribe: (() => void) | null = null;
@@ -177,6 +181,34 @@ export default function Dashboard() {
       await logout();
     } catch (error) {
       console.error('Logout failed:', error);
+    }
+  };
+
+
+
+  const getButtonTextForTournament = (tournament: Tournament) => {
+    const isSubscribed = userSubscriptions.includes(tournament.id);
+    
+    if (!isSubscribed) {
+      if (tournament.status === 'completed') return 'Tournament Ended';
+      if (tournament.status === 'playing') return 'In Progress';
+      const participantCount = tournament.participants?.length || 0;
+      const isFull = participantCount >= tournament.maxParticipants;
+      return isFull ? 'Tournament Full' : 'Join Tournament';
+    }
+    
+    // User is subscribed
+    switch (tournament.status) {
+      case 'upcoming':
+        return 'Registered ✓';
+      case 'active':
+        return 'Tournament Active';
+      case 'playing':
+        return 'View Details & Matches';
+      case 'completed':
+        return 'View Final Results';
+      default:
+        return 'Registered ✓';
     }
   };
 
@@ -685,7 +717,7 @@ export default function Dashboard() {
                               </svg>
                               <span>Tournament Completed</span>
                             </button>
-                          ) : tournament.status === 'playing' ? (
+                          ) : tournament.status === 'playing' && !isSubscribed ? (
                             <button
                               disabled
                               className="w-full bg-gradient-to-r from-orange-200 to-orange-300 text-orange-700 px-6 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center space-x-3 shadow-inner"
@@ -694,6 +726,17 @@ export default function Dashboard() {
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-4a1 1 0 012 0v.01a1 1 0 01-2 0V14zm.01-9a1 1 0 000 2h.01a1 1 0 100-2H9.01z" clipRule="evenodd" />
                               </svg>
                               <span>Tournament In Progress</span>
+                            </button>
+                          ) : tournament.status === 'playing' && isSubscribed ? (
+                            <button
+                              onClick={() => router.push(`/player/${tournament.id}`)}
+                              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-4 rounded-2xl font-bold transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center justify-center space-x-3"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              <span>View Details & Matches</span>
                             </button>
                           ) : isSubscribed ? (
                             <button
@@ -871,7 +914,7 @@ export default function Dashboard() {
                               </svg>
                               <span>Tournament Completed</span>
                             </button>
-                          ) : tournament.status === 'playing' ? (
+                          ) : tournament.status === 'playing' && !isSubscribed ? (
                             <button
                               disabled
                               className="w-full bg-gradient-to-r from-orange-200 to-orange-300 text-orange-700 px-6 py-4 rounded-2xl font-bold cursor-not-allowed flex items-center justify-center space-x-3 shadow-inner"
@@ -880,6 +923,17 @@ export default function Dashboard() {
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-4a1 1 0 012 0v.01a1 1 0 01-2 0V14zm.01-9a1 1 0 000 2h.01a1 1 0 100-2H9.01z" clipRule="evenodd" />
                               </svg>
                               <span>Tournament In Progress</span>
+                            </button>
+                          ) : tournament.status === 'playing' && isSubscribed ? (
+                            <button
+                              onClick={() => router.push(`/player/${tournament.id}`)}
+                              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-4 rounded-2xl font-bold transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center justify-center space-x-3"
+                            >
+                              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              <span>View Details & Matches</span>
                             </button>
                           ) : isSubscribed ? (
                             <button
