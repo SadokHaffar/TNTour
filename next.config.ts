@@ -3,8 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   
-  // Configure for static export (required for Netlify)
-  output: 'export',
+  // Configure for Netlify deployment with server functions
   trailingSlash: true,
   images: {
     unoptimized: true
